@@ -1,0 +1,536 @@
+import random
+from basic_agents import BasicAgent, BasicAgentFactory
+from graph import Graph, Node, Edge
+
+class GoAgent(BasicAgent):
+    
+    def choose_action(self, game_state):
+        
+        actions = game_state.getLegalActions(self.index)
+        return random.choice(actions)
+    
+         
+class GoAgentFactory(BasicAgentFactory):
+
+    def get_agents_list(self):
+        return [GoAgent, GoAgent]
+
+
+    def register_initial_state(self, game_state):
+        """This method handles the initial setup of the agent.
+        """
+        super(GoAgent, self).register_initial_state(game_state)
+        self.maze_graph, self.maze_nodes = self.create_maze_graph(game_state)
+        
+    def register_initial_state(self, game_state):
+        super(EatAgent, self).register_initial_state(game_state)
+        maze=game_state.getWalls()
+        print self.is_red
+        
+   
+	def legal_actions(self, game_state):
+		''' current legal actions '''
+		return game_state.getLegalActions(self.index)
+
+	def legalize_action(self,action, game_state):
+		'''If a given action is asked, it checks if it is possible and
+		return Stop if not'''
+		possible_actions = self.legal_actions(game_state)
+		if action in possible_actions:
+			return action
+		else:
+			return Directions.STOP
+
+    
+    def create_maze_graph(self, game_state):
+        """Create a graph representation of the non-wall positions"""
+        walls = game_state.getWalls()
+        width, height = walls.width, walls.height
+        
+        nodes = {}
+        for i in range(width):
+            for j in range(height):
+                if not walls[i][j]:
+                    nodes[(i,j)] = Node((i,j))
+        
+        edges = []
+        for (i,j), node in nodes.iteritems():
+            if (i+1,j) in nodes:
+                edges.append(Edge(nodes[(i,j)], nodes[(i+1,j)]))
+                edges.append(Edge(nodes[(i+1,j)], nodes[(i,j)]))
+            if (i,j+1) in nodes:
+                edges.append(Edge(nodes[(i,j)], nodes[(i,j+1)]))
+                edges.append(Edge(nodes[(i,j+1)], nodes[(i,j)]))
+                
+        return Graph(edges), nodes
+        
+    
+    def shortest_path(self, game_state, src, dest):
+        """Returns the path with the shortest length from src to dest.
+        
+        src and dest are tuples indicating cell locations. path is a list of tuples.
+        Ex: shortest_path((1,2), (2,4)) may return a path which is [(1,3), (2,3), (2,4)]
+        It includes the destination but excludes the source
+        """
+        edges_on_path, path_weight = self.maze_graph.shortest_path(self.maze_nodes[src], self.maze_nodes[dest])
+        path = [edge.head.position for edge in edges_on_path]
+        return path
+        
+max_path_length=40
+
+def recursive_f(food, remaining_food_input, current_path_input):
+    if not remaining_food_input:
+        paths.append(current_path)
+    else:
+        current_path =list(current_path_input)
+        remaining_food=list(remaining_food_input)
+        
+        for next_food in remaining_food: #sort this list by distance with food!
+            if len(current_path)+len(get_path(food, next_food))<=max_path_length:
+                
+                for f_index in range(len(total_food)):
+                    if total_food[f_index] == next_food:
+                        remaining_foods.pop(f_index)
+                current_path.append(next_food)
+                recursive_f(next_food, remaining_food, current_path)
+             else:
+                remaining_food=[]
+                paths.append(current_path) #not sure!!
+
+
+    # EatAgentG0
+    def possible_paths(self, game_state):
+        agent_index=self.index
+        position=game_state.getAgentPosition(agent_index)
+        if self.is_red:
+            food_map=game_state.getRedFood()
+        else:  
+            food_map=game_state.getBlueFood()
+        total_food=[]
+        for x in food_map:
+            for y in food_map[x]:
+                    if food_map[x][y]:
+                        total_food.append([x,y])
+
+        paths=[]
+        ###change to start a single recursion from pacman position
+        for starting_food in total_food:
+            #current_path_length=
+            current_path= get_path(position, starting_food  )
+            remaining_foods=list(total_food)
+           
+            recursive_f(starting_food, remaining_foods, current_path )
+            
+            
+-----------------------------------------------------------------------------
+# Using a scoring function
+  
+class ScoringAgent(BasicAgent):
+    """Agent going for highest score concerning scoring function"""
+        
+    def __init__(self,index, scoringfunction):
+        super(ScoringAgent,self).__init__(index)
+	self.scoringfunction = scoringfunction
+              
+    def choose_action(self, game_state):
+        """Choose legal action with highest score..."""
+        self.say(random.choice(['Am alive']))
+        legalactions = numpy.array(game_state.getLegalActions(self.index))
+        scores = self.scoringfunction(self.predict_pos(game_state,legalactions), game_state, self.index)
+        maxscore = scores.max()
+        action_s = legalactions[scores == maxscore]
+        return random.choice(action_s)
+	
+    def predict_pos(self, game_state,legalactions):
+    	"""Give resulting states of legal actions"""
+	position=numpy.array(game_state.getAgentPosition(self.index))
+    	transform={'Stop':[0,0],'North':[0,1],'East':[1,0],'South':[0,-1],'West':[-1,0]}
+	states=[]
+	for action in legalactions:
+	   states.append(position+transform[action])
+	return states
+ 
+class ScoringAgentFactory(BasicAgentFactory):
+
+    def __init__(self, **args):
+        super(ScoringAgentFactory, self).__init__(**args)
+    	self.scoringfunctions = [ScoringFunctions().constant_scoring_f, ScoringFunctions().constant_scoring_f]
+    
+    def get_agents_list(self):
+        return [ScoringAgent, ScoringAgent]
+	
+    def getAgent(self, index):
+        "Returns the agent for the provided index (customized with the corresponding scoringFunction)"
+        idx = self._agent_idx
+        if idx >= len(self._agents_list):
+            return ScoringAgent(index, self.scoringfunctions)        
+        agent_class = self._agents_list[self._agent_idx]
+        self._agent_idx += 1
+        return agent_class(index,self.scoringfunctions[idx-1])
+    
+    
+class ScoringFunctions(object):
+    """ Contains scoring functions to rate (states)/(future legal actions)"""
+    
+    def __init__(self):
+        features=FeatureFunctions()
+    
+    def constant_scoring_f(self,states,game_state, agentindex):
+        """ Trivial s.f. returning 1"""
+	return numpy.ones(states.shape)
+	
+    def nearest_manhatten_food_f(self, states, agentindex):   # NOTTESTED
+        """ Return as score the nearest manhatten distance to food"""
+	scores=[]
+	for state in states:
+	    scores.append(features.nearestFood(game_state,game_state.getAgentPosition(agentindex)))
+	return scores   
+    
+class FeatureFunctions(object):
+
+    def manhatten_distance(pos1, pos2):
+        return abs(pos1[0]-pos2[0])+ abs(pos1[1]-pos2[1])
+
+    def nearestFood(self,game_state,position):	
+        food=gameState.getBlueFood
+        current_nearest_dist=numpy.Inf 
+	for x in food.shape()[0]:
+	     for y in food.shape()[1]:
+	         if gam_state[x,y]:
+		     dist=self.manhatten_distance((x,y),position)	
+		     if dist<current_nearest_dist:
+		         current_nearest_dist=dist
+	return current_nearest_dist
+      
+----------------------------------------------------------------------------------------------------
+
+"""This is Group 3's agent for the foraging behavior.
+"""
+
+from basic_agents import BasicAgentFactory
+from numpy import array, argsort
+from game import Directions
+from path_graph import GraphKnowingAgent
+
+class ForagingAgent(GraphKnowingAgent):
+    """Group 3's foraging behavior"""
+    dir_dict = {(0, 1) : Directions.NORTH, (0, -1) : Directions.SOUTH,
+                    (1, 0) : Directions.EAST, (-1, 0) : Directions.WEST }
+    
+    def register_initial_state(self, game_state):
+        """This method handles the initial setup of the agent.
+        It has been overridden since we have business to do
+        before the game begins (e.g., analyzing the maze).
+        """
+        # begin: copied from basic_agent.py
+        self.is_red = game_state.isOnRedTeam(self.index)
+        
+        # Set up access to graphics if available
+        import __main__
+        if '_display' in dir(__main__):
+            self._display = __main__._display
+            self._txt_message = ''
+            self._txt_graphics = None
+            self._txt_pos = None    
+        # end: copied
+        # our code:
+        self.construct_graph(game_state)
+
+    def choose_action(self, game_state):
+        """Returns the action for this Agent"""
+        self.state = 5
+        if self.state == 5:
+            ourfoodgrid = self.get_food(game_state, False)
+            theirfoodgrid = self.get_food(game_state, True)
+            for pos, node in self.nodes.items():
+                node.food = int(ourfoodgrid[pos[0]][pos[1]])
+                node.food = -int(theirfoodgrid[pos[0]][pos[1]])
+                node.foodvalue = node.food
+            foodval_list = []
+            pos_list = []
+            for pos, node in self.nodes.items():
+                for npos, distance in self.get_neighbors(pos, 3).items():
+                    node.foodvalue += self.nodes(npos).food/(1.0 + distance)
+                foodval_list.append(node.foodvalue)
+                pos_list.append(pos)
+            indices = argsort(foodval_list)[:-5]
+            my_pos = self.get_my_position(game_state)
+            min_path = 99999999999
+            for ix in indices:
+                thispath = self.get_shortest_path(my_pos, pos_list[ix])
+                if len(thispath) < len(min_path):
+                    min_path = thispath
+        return self.get_action(my_pos, (my_pos[0], my_pos[1]-1), game_state) #shortest
+
+    def get_action(self, origin, destination, game_state):
+        """Returns the action to be performed to reach the destination 
+        from the origin. Origin and Destination have to be 1 apart.
+        """
+        legals = game_state.getLegalActions(self.index)
+        diff = (destination[0] - origin[0], destination[1] - origin[1])
+        try:
+            action = ForagingAgent.dir_dict[diff]
+        except KeyError:
+            print "Origin and destination are not exactly 1 apart."
+            raise
+        if action in legals:
+            return action
+        else:
+            raise ValueError("No legal move to destination.") 
+        
+        
+        
+    def get_my_position(self, game_state):
+        """Returns the position of this agent as a tuple."""
+        our_rank = self.get_team_indices(game_state, False).index(self.index)
+        our_position = self.get_team_positions(game_state, False)[our_rank]
+        return our_position
+
+class ForagingAgentFactory(BasicAgentFactory):
+    """The required Factory for this agent."""
+    def get_agents_list(self):
+        """Returns two instances of the agent"""
+        return [ForagingAgent, ForagingAgent]
+
+
+
+----------------------------------------------------------------------------------------------------
+
+import unittest
+import basic_agents
+from testingTools import get_mock_game
+from go_agents import GoAgent, GoAgentFactory
+
+
+class GoTestCase(unittest.TestCase):
+    
+    def setUp(self):
+        self.create_test_data_1()
+        
+             
+    def create_test_data_1(self):
+        self.layout_txt = """%%%%%%%%%%%%%%%%%%%%
+                             %       %   ....  2%
+                             %  %%   %   %%     %
+                             %...% .   . %   .. %
+                             %  %  . %   %%%%   %
+                             %%%%% . %   % ..   %
+                             %..     % . % . %%%%
+                             % %   .            %
+                             % ...%.         %  %
+                             %   %%%%%%%     %. %
+                             %   %%.   %     %..%
+                             %   % .        %%%%%
+                             %     .         .  %
+                             %1    %.. %%  % ...%
+                             %%%%%%%%%%%%%%%%%%%%
+                             """
+        self.known_shortest_paths = {((1,1), (1,8)) : [(1,2), (1,3), (1,4),
+                                                       (1,5), (1,6), (1,7), (1,8)], 
+                                     ((6,9), (3,11)) : [(6,10), (6,11), (6,12), 
+                                                        (6,13), (5,13), (4,13),
+                                                        (3,13), (2,13), (2,12), 
+                                                        (2,11), (3,11)]}
+        self.known_shortest_path_weights = {((1,1), (1,8)) : 7, 
+                                            ((6,9), (3,11)) : 11,
+                                            ((7,1), (4,6)) : 10}
+    
+    def test_red_blue_knowledge(self):
+        """Test whether the agents know their team"""
+        agents = [GoAgent(0), GoAgent(1)]
+        lt, game = get_mock_game(self.layout_txt, agents)
+        game._init_run()
+        self.assertTrue(agents[0].is_red)
+        self.assertFalse(agents[1].is_red)
+        
+    
+    def test_shorthest_path(self):
+        """Test the shortest path finding algorithms with some known data"""
+
+        agents = [GoAgent(0), basic_agents.BasicAgent(1)]
+        lt, game = get_mock_game(self.layout_txt, agents)
+        game._init_run()
+ 
+        
+        for (src, dest), known_path in self.known_shortest_paths.iteritems():
+            found_path = agents[0].shortest_path(game.state, src, dest)
+            self.assertEqual(known_path, found_path)
+            
+        for (src, dest), known_path_weight in self.known_shortest_path_weights.iteritems():
+            found_path = agents[0].shortest_path(game.state, src, dest)
+            found_path_weight = len(found_path)
+            self.assertEqual(known_path_weight, found_path_weight)
+         
+        #print game.state.getWalls()   
+
+        
+if __name__=='__main__':
+    unittest.main()
+
+    
+    -------------------------------------------
+    
+    import unittest
+import sys
+import Agents
+import testingTools
+
+class ScoringAgentTest(unittest.TestCase):
+    def test__init__(self):
+        testagent=Agents.ScoringAgent(3	,Agents.ScoringFunctions().constant_scoring_f)
+	self.failUnlessEqual(testagent.index, 3)
+	
+	
+    def test_choose_action(self):
+    
+    
+    
+        testagent=Agents.ScoringAgent(0,Agents.ScoringFunctions().constant_scoring_f)
+	
+        layout_txt = """%%%%%%%%
+                        %      %
+                        %     .%
+                        %1     %
+                        %%%%%%%%
+                        """
+        lt, game = testingTools.get_mock_game(layout_txt, [testagent])
+        game._init_run()
+	legalactions = game.state.getLegalActions(testagent.index)
+	action = testagent.choose_action(game.state)
+	self.failUnless(action in legalactions)
+	
+	
+	layout_txt = """%%%%%%%%
+                        %     1%
+                        %     .%
+                        %      %
+                        %%%%%%%%	
+                        """
+        lt, game = testingTools.get_mock_game(layout_txt, [testagent])
+        game._init_run()
+	legalactions = game.state.getLegalActions(testagent.index)
+	action = testagent.choose_action(game.state)
+	self.failUnless(action in legalactions) 
+	
+        layout_txt = """%%%%%%%%
+                        %      %
+                        %     .%
+                        %     1%
+                        %%%%%%%%
+                        """
+        lt, game = testingTools.get_mock_game(layout_txt, [testagent])
+        game._init_run()
+	legalactions = game.state.getLegalActions(testagent.index)
+	action = testagent.choose_action(game.state)
+	self.failUnless(action in legalactions)
+	
+        layout_txt = """%%%%%%%%
+                        %1     %
+                        %     .%
+                        %      %
+                        %%%%%%%%
+                        """
+        lt, game = testingTools.get_mock_game(layout_txt, [testagent])
+        game._init_run()
+	legalactions = game.state.getLegalActions(testagent.index)
+	action = testagent.choose_action(game.state)
+	self.failUnless(action in legalactions)
+
+	
+	
+if __name__=="__main__":
+    unittest.main()
+
+    -----------------------------------------------------
+    # mazeLib.py G1
+    
+from game import GameStateData
+from game import Game, Grid
+from nikoGraph import Graph, Node, Edge
+import numpy
+
+def shortest_path(grid, startpoint, endpoint):
+
+    nodes = [[Node() for _ in range(grid.height)] for _ in range(grid.width)]
+
+    #nodes[x][y]
+    #grid[x][y]
+
+    edges = []
+    for x in range(grid.width):
+        for y in range(grid.height):
+            if grid[x][y]==False:
+                continue
+            if (x>0) and (grid[x-1][y]):
+                edges.append(Edge(nodes[x][y],nodes[x-1][y]))
+            if (x<grid.width-1) and (grid[x+1][y]):
+                edges.append(Edge(nodes[x][y],nodes[x+1][y]))
+            if (y>0) and (grid[x][y-1]):
+                edges.append(Edge(nodes[x][y],nodes[x][y-1]))
+            if (y<(grid.height-1)) and (grid[x][y+1]):
+                edges.append(Edge(nodes[x][y],nodes[x][y+1]))
+        pass
+    
+    graph = Graph(edges)
+    path, length = graph.shortest_path( nodes[startpoint[0]][startpoint[1]],nodes[endpoint[0]][endpoint[1]])
+
+    return _convert_path2xy(path,nodes), length
+
+def _convert_path2xy(path,nodes):
+    xypath=[]
+    for e in path:
+        for y in range(len(nodes)):
+            for x in range(len(nodes[y])):
+                if nodes[y][x] is e.tail:
+                    xypath.append((y,x))
+                    break
+    
+    for y in range(len(nodes)):
+        for x in range(len(nodes[y])):
+            if nodes[y][x] is e.head:
+                xypath.append((y,x))
+                break
+    
+    return xypath
+
+
+def find_nearest_element(mazegrid,targetgrid,pos):
+    """ find_nearest_element(mazegrid,targetgrid,position)
+    input:
+        mazegrid from class Grid : walls
+        targetgrid from class Grid : desired target points, ie food or enemies
+        position [x,y]: starting position
+        
+    output: best_path,best_distance, where
+        best_path [(x,y)(x1,y1)...(xend,yend)]
+        best_distance: distance to nearest target
+
+    Example:
+        ...
+        path,dist = find_nearest_element(maze,food,[10,14])
+        if dist<mydist ...
+        ...
+    """
+    best_distance = numpy.Inf
+    best_path = []
+    for x in range(targetgrid.width):
+        for y in range(targetgrid.height):
+            if targetgrid[x][y]==False:
+                continue
+            current_path,current_distance = shortest_path(mazegrid,pos,[x,y])
+            if (current_distance < best_distance):
+                best_path = current_path
+                best_distance = current_distance
+
+    return best_path,best_distance
+
+if __name__ == '__main__':
+    mg = Grid(3,2)
+    mg.data = [[1,0],[1,1],[1,1]]
+    #print  g
+    path,dist = shortest_path(mg,[0,0],[2,1])
+    print path
+    fg = Grid(3,2)
+    fg.data = [[0,0],[0,1],[0,1]]
+    path,dist=find_nearest_element(mg,fg,[0,0])
+    print path

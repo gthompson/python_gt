@@ -1,0 +1,83 @@
+#!/opt/antelope/python2.7.2-64/bin/python
+
+import os
+import sys
+import signal
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+sys.path.append(os.environ['ANTELOPE'] + "/data/python")
+
+import Tkinter
+
+class BCanvas(Tkinter.Canvas):
+	def create_viewport(self, *args, **kw):
+		"""Create viewport with viewportName at x,y."""
+		return self._create('viewport', args, kw)
+	def create_axes(self, *args, **kw):
+		"""Create axes in viewportName."""
+		return self._create('axes', args, kw)
+	def create_grid(self, *args, **kw):
+		"""Create grid in viewportName."""
+		return self._create('grid', args, kw)
+	def create_ptext(self, *args, **kw):
+		"""Create ptext in viewportName with textstring at =
+x,y."""
+		return self._create('ptext', args, kw)
+	def create_polyline(self, *args, **kw):
+		"""Create polyline in viewportName."""
+		return self._create('polyline', args, kw)
+	def create_polypoint(self, *args, **kw):
+		"""Create polypoint in viewportName."""
+		return self._create('polypoint', args, kw)
+	def create_map(self, *args, **kw):
+		"""Create map in viewportName."""
+		return self._create('map', args, kw)
+
+from Tkinter import *
+
+tk = Tk()
+
+tk.eval("set auto_path [linsert $auto_path 0 " + os.environ['ANTELOPE'] + "/lib]")
+tk.eval("package require Brttplot")
+
+f = Frame(tk)
+c = BCanvas(f, width=800, height=800)
+
+c.create_viewport('myvp', 0, 0, \
+			width=0, height=0, \
+            xleft=0.0, xright=5.0, \
+            ybottom=-1.1, ytop=1.1, \
+            mleft=80, mright=20, \
+            mbottom=50, mtop=30, \
+            fill_frame='lightblue', \
+            fill='#e0e0e0', tag='vp')
+
+c.create_axes('myvp', \
+            xlabel='My X-stuff', \
+            ylabel='My Y-stuff', \
+            xformat='%.1f', \
+            yformat='%.1f', \
+            linewidth=2, \
+            axis_style='sw', \
+            tic_style='siwinoeo')
+
+c.create_grid('myvp', \
+            linewidth=2, \
+            fill='black', \
+            fill_small='gray')
+
+c.create_ptext('myvp', 'My text', '0.5v', 'top+0.1i', \
+            fill='red', \
+            font='times 14 bold', \
+            justification='s', \
+            angle=0)
+
+c.create_polyline('myvp', '-test', \
+            outline='blue', \
+            linewidth=3)
+
+c.pack(side=TOP, fill=BOTH, expand=1)
+f.pack(side=TOP, fill=BOTH, expand=1)
+
+tk.mainloop()

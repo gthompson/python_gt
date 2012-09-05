@@ -1,0 +1,183 @@
+
+>>> import sys
+>>> sys.path
+>>> sys.path.append('F:/')
+>>> sys.path.append('F:/diveintopython-5.4/py')
+>>> sys.path.append('F:/GNodePython/bin')
+
+Dictionary in Python === Hash in Perl
+>>> d = {"server":"mpilgrim", "database":"master"}
+>>> d
+{'server': 'mpilgrim', 'database': 'master'}
+>>> d["server"]
+'mpilgrim'
+>>> d["database"]
+'master'
+>>> d
+{'server': 'mpilgrim', 'database': 'pubs'}
+>>> d["uid"] = "sa"
+>>> d = {}
+>>> d["retrycount"] = 3
+>>> d
+{'server': 'mpilgrim', 'uid': 'sa', 'database': 'master', 'retrycount': 3}
+>>> d[42] = "douglas"
+>>> d
+{'server': 'mpilgrim', 'uid': 'sa', 'database': 'master',
+42: 'douglas', 'retrycount': 3}
+>>> del d[42]
+>>> d
+{'server': 'mpilgrim', 'uid': 'sa', 'database': 'master', 'retrycount': 3}
+>>> d.clear()
+>>> d
+{}
+>>> params = {"server":"mpilgrim", "database":"master", "uid":"sa", "pwd":"secret"}
+>>> params.keys()
+['server', 'uid', 'database', 'pwd']
+>>> params.values()
+['mpilgrim', 'sa', 'master', 'secret']
+>>> params.items()
+[('server', 'mpilgrim'), ('uid', 'sa'), ('database', 'master'), ('pwd', 'secret')]
+
+List in Python === Array in Perl
+>>> li = ["a", "b", "mpilgrim", "z", "example"]
+>>> li
+['a', 'b', 'mpilgrim', 'z', 'example']
+>>> li[0]
+'a'
+>>> li[4]
+'example'
+>>> li[-1]
+'example'
+>>> li[-3]
+'mpilgrim'
+>>> li
+['a', 'b', 'mpilgrim', 'z', 'example']
+>>> li[1:3]
+['b', 'mpilgrim']
+>>> li[1:-1]
+['b', 'mpilgrim', 'z']
+>>> li[0:3]
+['a', 'b', 'mpilgrim']
+>>> li.append("new")
+>>> li
+['a', 'b', 'mpilgrim', 'z', 'example', 'new']
+>>> li.insert(2, "new")
+>>> li
+['a', 'b', 'new', 'mpilgrim', 'z', 'example', 'new']
+>>> li.extend(["two", "elements"])
+>>> li
+['a', 'b', 'new', 'mpilgrim', 'z', 'example', 'new', 'two', 'elements']
+>>> li = ['a', 'b', 'c']
+>>> li.extend(['d', 'e', 'f'])
+>>> li
+['a', 'b', 'c', 'd', 'e', 'f']
+>>> len(li)
+6
+>>> li[-1]
+'f'
+>>> li = ['a', 'b', 'c']
+>>> li.append(['d', 'e', 'f'])
+>>> li
+['a', 'b', 'c', ['d', 'e', 'f']]
+>>> len(li)
+4
+>>> li[-1]
+['d', 'e', 'f']
+>>> li
+['a', 'b', 'new', 'mpilgrim', 'z', 'example', 'new', 'two', 'elements']
+>>> li.index("example")
+5
+>>> li.index("new")
+2
+>>> li
+['a', 'b', 'new', 'mpilgrim', 'z', 'example', 'new', 'two', 'elements']
+>>> li.remove("z")
+>>> li
+['a', 'b', 'new', 'mpilgrim', 'example', 'new', 'two', 'elements']
+>>> li.remove("new")
+>>> li.pop()
+'elements'
+>>> li
+['a', 'b', 'mpilgrim', 'example', 'new', 'two']
+>>> li = ['a', 'b', 'mpilgrim']
+>>> li = li + ['example', 'new']
+>>> li
+['a', 'b', 'mpilgrim', 'example', 'new']
+>>> li += ['two']
+>>> li
+['a', 'b', 'mpilgrim', 'example', 'new', 'two']
+>>> li = [1, 2] * 3
+>>> li
+[1, 2, 1, 2, 1, 2]
+
+Tuples in Python -> Constant Lists (no methods) use ()
+>>> t = ("a", "b", "mpilgrim", "z", "example")
+>>> t
+('a', 'b', 'mpilgrim', 'z', 'example')
+>>> t[0]
+'a'
+>>> t[-1]
+'example'
+>>> t[1:3]
+('b', 'mpilgrim')
+>>> (MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY) = range(7)
+
+List Comprehension
+>>> li
+[1, 9, 8, 4]
+>>> li = [elem*2 for elem in li]
+>>> li
+[2, 18, 16, 8]
+
+List Filtering
+>>> li = ["a", "mpilgrim", "foo", "b", "c", "b", "d", "d"]
+>>> [elem for elem in li if len(elem) > 1]
+['mpilgrim', 'foo']
+>>> [elem for elem in li if elem != "b"]
+['a', 'mpilgrim', 'foo', 'c', 'd', 'd']
+>>> [elem for elem in li if li.count(elem) == 1]
+['a', 'mpilgrim', 'foo', 'c']
+
+Function calls with optional/named arguments
+
+def info(object, spacing=10, collapse=1):
+>>> info(odbchelper)
+>>> info(odbchelper, 12)
+>>> info(odbchelper, collapse=0)
+>>> info(spacing=15, object=odbchelper)
+
+type - can call on anything to get its datatype
+str - can call on anything to convert to a string
+dir - can call on any object (functions are also objects) to get its methods
+
+Split and Join
+>>> s = "this is\na\ttest"
+>>> print s
+this is
+a test
+>>> print s.split()
+['this', 'is', 'a', 'test']
+>>> print " ".join(s.split())
+'this is a test'
+
+
+>>> import random
+>>> random.choice([’apple’, ’pear’, ’banana’])
+’apple’
+>>> random.sample(xrange(100), 10) # sampling without replacement
+[30, 83, 16, 4, 8, 81, 41, 50, 18, 33]
+>>> random.random() # random float
+0.17970987693706186
+>>> random.randrange(
+>>> # dates are easily constructed and formatted
+
+>>> from datetime import date
+>>> now = date.today()
+>>> now
+datetime.date(2003, 12, 2)
+>>> now.strftime("%m-%d-%y. %d %b %Y is a %A on the %d day of %B.")
+’12-02-03. 02 Dec 2003 is a Tuesday on the 02 day of December.’
+>>> # dates support calendar arithmetic
+>>> birthday = date(1964, 7, 31)
+>>> age = now - birthday
+>>> age.days

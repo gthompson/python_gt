@@ -1,0 +1,27 @@
+import numpy as np
+import scipy as sp
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from sp import signal, fftpack
+help
+sp.info(toolbox.method)
+
+sp.isnan
+sp.isfinite
+sp.isinf
+sp.sqrt
+sp.iscomplex
+sp.isreal
+sp.isscalar
+sp.real
+sp.imag
+sp.cast
+sp.pi
+r_ = concatenate rows
+c_ = concatenate columns
+mgrid[0:5,0:5] = a matrix mesh grid 5x5
+
+poly1d = construct a polynomial in 1 variable (any degree)
+can then integ or deriv this polynomial
+
+

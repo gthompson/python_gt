@@ -10,6 +10,45 @@ if 'DISPLAY' in os.environ.keys():
 import matplotlib.pyplot as plt
 import datetime
 #################################
+
+def readplacesdb(dbplacespath):
+	###########################################
+	# should be able to do this with code like:
+	#
+	#db = datascope.dbopen( dbpath, 'r')
+	#db = db.lookup( table = 'places' )
+	#db = db.sort('lon')
+	#n = db.nrecs()
+	#if n > 0:
+        #print "- number of places = {}".format(n)
+        #for db[3] in range(n):
+        #        (placename, placetype, placelat, placelon, placeelev) = db.getv('place','placetype','lat','lon','elev')
+	#
+	# but this does not work. Neither does the Perl equivalent. So although dbe opens the places database, there might
+	# be a problem with the database. So just treat the table as a file and parse it instead.
+	#
+	dbtablepath = dbplacespath + ".places"
+	placename = list()
+	placetype = list()
+	placelat = list()
+	placelon = list()
+	placeelev = list()
+	if os.path.exists(dbtablepath):
+		f = open(dbtablepath)
+		lines = f.readlines()
+		f.close()
+		for line in lines:
+			elements = line.split()
+			placename.append(elements[3])
+			placetype.append(elements[4])
+			placelat.append(elements[0])
+			placelon.append(elements[1])
+			placeelev.append(elements[2])
+	else:
+		print dbtablepath + " does not exist"		
+	return {'place':placename, 'placetype':placetype, 'lat':placelat, 'lon':placelon, 'elev':placeelev}
+
+
 def dbgetorigins(dborigin, subset_expr):
 	# load origins from database
 	dbptr = dborigin.subset(subset_expr)
